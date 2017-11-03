@@ -1,0 +1,14 @@
+{
+    "name": "prone/sf-config",
+    "type": "project",
+    "require": {
+        "symfony/config": "^3.3",
+        "symfony/yaml": "^3.3"
+    },
+    "authors": [
+        {
+            "name": "Rudie Dirkx",
+            "email": "rdirkx@pronexus.nl"
+        }
+    ]
+}
