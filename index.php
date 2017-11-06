@@ -12,6 +12,8 @@ $overrideConfig = Yaml::parse(file_get_contents('override.yml'));
 
 echo '<pre>';
 
+$_time = microtime(1);
+
 $processor = new Processor();
 $configuration = new MyConfiguration();
 try {
@@ -21,3 +23,5 @@ try {
 catch (InvalidConfigurationException $ex) {
     echo $ex->getMessage();
 }
+
+echo "\n" . number_format((microtime(1) - $_time) * 1000, 2) . " ms\n";

@@ -1,59 +1,60 @@
 <?php
 
-use Symfony\Component\Config\Definition\Builder\NodeDefinition;
+use Symfony\Component\Config\Definition\Builder\NodeBuilder;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
-use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 
 interface Option {
-    function name(): string;
-    function build(): NodeDefinition;
+    function build($name, NodeBuilder $node);
 }
 
 class PulsatingErrorMessagesOption implements Option {
-    function name(): string {
-        return 'pulsating_error_messages';
-    }
-    function build(): NodeDefinition {
-        $treeBuilder = new TreeBuilder();
-        $rootNode = $treeBuilder->root($this->name());
-        $rootNode
+    function build($name, NodeBuilder $node) {
+        $node->arrayNode($name)
             ->children()
-                ->integerNode('size')
+                ->integerNode('size')->isRequired()->end()
             ->end()
-        ;
-        return $rootNode;
+        ->end();
     }
 }
 
-class MoreRowsOption implements Option {
-    function name(): string {
-        return 'more_rows';
+class MinutesBeforeAndAfterOption implements Option {
+    function build($name, NodeBuilder $node) {
+        $node->arrayNode($name)
+            ->children()
+                ->integerNode('before')->end()
+                ->integerNode('after')->end()
+            ->end()
+        ->end();
     }
-    function build(): NodeDefinition {
-        $treeBuilder = new TreeBuilder();
-        $rootNode = $treeBuilder->root($this->name());
-        $rootNode
-            ->scalarPrototype()->defaultFalse()->end()
-        ;
-        return $rootNode;
+}
+
+class BooleanOption implements Option {
+    function build($name, NodeBuilder $node) {
+        $node->booleanNode($name)
+            ->treatNullLike(true)
+            ->validate()
+                ->ifEmpty()
+                ->thenInvalid('Cannot be false')
+            ->end()
+        ->end();
     }
 }
 
 class MyConfiguration implements ConfigurationInterface {
-	function getConfigTreeBuilder() {
-		$treeBuilder = new TreeBuilder();
-		$rootNode = $treeBuilder->root('test');
+    function getConfigTreeBuilder() {
+        $treeBuilder = new TreeBuilder();
+        $rootNode = $treeBuilder->root('test');
 
-		$rootNode->
-			children()
-				->arrayNode('meta')
+        $node = $rootNode->
+            children()
+                ->arrayNode('meta')
                     ->children()
-                        ->scalarNode('name')->end()
+                        ->scalarNode('name')->isRequired()->end()
                         ->scalarNode('version')->end()
                     ->end()
                 ->end()
-				->arrayNode('flow')
+                ->arrayNode('flow')
                     ->performNoDeepMerging()
                     ->arrayPrototype()
                         ->children()
@@ -61,40 +62,33 @@ class MyConfiguration implements ConfigurationInterface {
                         ->end()
                     ->end()
                 ->end()
-                ->append($this->getOptionNodes())
+                ->arrayNode('options')
+                    ->children();
+        $this->appendOptions($node);
+                    $node->end()
+                ->end()
             ->end()
         ;
 
-		return $treeBuilder;
-	}
-
-	function getOptionNodes() {
-        $treeBuilder = new TreeBuilder();
-        $rootNode = $treeBuilder->root('options');
-
-        $node = $rootNode->children();
-
-        /** @var Option $option */
-        $optionNames = [];
-        foreach ($this->getOptions() as $optionClass) {
-            $option = new $optionClass;
-            $optionName = $option->name();
-            if (in_array($optionName, $optionNames)) {
-                throw new InvalidConfigurationException("Option used more than once: $optionName");
-            }
-            $optionNames[] = $optionName;
-            $node->append($option->build());
-        }
-
-        $node->end();
-
-        return $rootNode;
+        return $treeBuilder;
     }
 
+    function appendOptions(NodeBuilder $node) {
+        /** @var Option $option */
+        foreach ($this->getOptions() as $optionName => $optionClass) {
+            $option = new $optionClass;
+            $option->build($optionName, $node);
+        }
+    }
+
+    /**
+     * @return Option[]
+     */
     function getOptions() {
-	    return [
-            PulsatingErrorMessagesOption::class,
-            MoreRowsOption::class
+        return [
+            'pulsating_error_messages' => PulsatingErrorMessagesOption::class,
+            'more_rows' => BooleanOption::class,
+            'time_override' => MinutesBeforeAndAfterOption::class,
         ];
     }
 }

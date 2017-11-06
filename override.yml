@@ -2,3 +2,10 @@ meta:
   name: "Override"
 flow:
   - name: x
+options:
+  pulsating_error_messages:
+    size: 100
+  more_rows: true
+  time_override:
+    before: 10
+    after: 5
