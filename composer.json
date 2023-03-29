@@ -2,8 +2,8 @@
     "name": "prone/sf-config",
     "type": "project",
     "require": {
-        "symfony/config": "^3.3",
-        "symfony/yaml": "^3.3"
+        "symfony/config": "^6.0",
+        "symfony/yaml": "^6.0"
     },
     "authors": [
         {

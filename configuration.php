@@ -43,8 +43,8 @@ class BooleanOption implements Option {
 
 class MyConfiguration implements ConfigurationInterface {
     function getConfigTreeBuilder() {
-        $treeBuilder = new TreeBuilder();
-        $rootNode = $treeBuilder->root('test');
+        $treeBuilder = new TreeBuilder('test');
+        $rootNode = $treeBuilder->getRootNode();
 
         $node = $rootNode->
             children()
